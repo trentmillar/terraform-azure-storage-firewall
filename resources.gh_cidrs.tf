@@ -32,18 +32,18 @@ locals {
   offset = length(local.class_Bs) - local.max_cidrs_in_stg_act_fw
 
   # find the class B's that can roll up to a class A to fit into the FW
-   drops = local.offset >= 0 ? [ for k, v in {
-     for e in [for e in keys(local.class_Bs) : e] : regex("^\\d{1,3}", e) => regex("^\\d{1,3}", e)...
-   } : k if length(v) > local.offset] : []
+  drops = local.offset >= 0 ? [for k, v in {
+    for e in [for e in keys(local.class_Bs) : e] : regex("^\\d{1,3}", e) => regex("^\\d{1,3}", e)...
+  } : k if length(v) > local.offset] : []
 
   # create the cidrs that will fit into the FW's allowed IPs
   cidrs = length(local.drops) == 0 ? {
     for k, v in local.class_Bs : format("%s.0.0/16", k) => 1
     } : (
     merge({
-      for k, v in local.class_Bs : format("%s.0.0/16", k) => 1 if regex("^\\d{1,3}", k) != regex("^\\d{1,3}", element(local.drops, length(local.drops)-1))
+      for k, v in local.class_Bs : format("%s.0.0/16", k) => 1 if regex("^\\d{1,3}", k) != regex("^\\d{1,3}", element(local.drops, length(local.drops) - 1))
       }, {
-      format("%s.0.0.0/8", regex("^\\d{1,3}", element(local.drops, length(local.drops)-1))) = 1
+      format("%s.0.0.0/8", regex("^\\d{1,3}", element(local.drops, length(local.drops) - 1))) = 1
     })
   )
 }
